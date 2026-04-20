@@ -1,0 +1,6 @@
+# Nice PlayLand - Requirements
+Flask>=2.3.0
+qrcode[pil]>=7.4
+midtransclient>=1.3.0
+python-dotenv>=1.0.0
+gunicorn>=21.0.0

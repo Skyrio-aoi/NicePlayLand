@@ -1,0 +1,171 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="icon-xl">🎢</span>
+        <div>
+            <h2>Kelola Wahana</h2>
+            <p class="text-muted">Tambah, edit, atau hapus wahana</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>➕ Tambah Wahana Baru</h3>
+    </div>
+    <form method="POST" class="wahana-form">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>🎢 Nama Wahana</label>
+                <input type="text" name="nama" placeholder="Contoh: Roller Coaster" required>
+            </div>
+            <div class="form-group">
+                <label>😀 Emoji</label>
+                <input type="text" name="emoji" placeholder="Contoh: 🎢" required>
+            </div>
+            <div class="form-group full-width">
+                <label>📝 Deskripsi</label>
+                <input type="text" name="deskripsi" placeholder="Deskripsi wahana" required>
+            </div>
+            <div class="form-group">
+                <label>🏷️ Kategori</label>
+                <select name="kategori">
+                    <option value="dry">🌊 Wahana Dry</option>
+                    <option value="water">💧 Wahana Water</option>
+                    <option value="indoor">🏠 Indoor</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>⚙️ Status</label>
+                <select name="status">
+                    <option value="available">✅ Tersedia</option>
+                    <option value="maintenance">🔧 Dalam Perbaikan</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>⏱️ Wait Time (menit)</label>
+                <input type="number" name="wait_time" placeholder="0" value="0">
+            </div>
+        </div>
+        <button type="submit" class="btn-primary">
+            <span>💾</span> Simpan Wahana
+        </button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>📋 Daftar Wahana ({{ wahana|length }})</h3>
+    </div>
+    <div class="wahana-grid">
+        {% for w in wahana %}
+        <div class="wahana-card" data-id="{{ w['id'] }}">
+            <div class="wahana-emoji">{{ w['emoji'] }}</div>
+            <div class="wahana-info">
+                <h4>{{ w['nama'] }}</h4>
+                <p>{{ w['deskripsi'] }}</p>
+                <div class="wahana-meta">
+                    <span class="meta-tag">{{ w['kategori'] }}</span>
+                    {% if w['status'] == 'available' %}
+                    <span class="meta-tag available">✅ Tersedia</span>
+                    {% else %}
+                    <span class="meta-tag maintenance">🔧 Perbaikan</span>
+                    {% endif %}
+                    <span class="meta-tag">⏱️ {{ w['wait_time'] }} menit</span>
+                </div>
+            </div>
+            <div class="wahana-actions">
+                <button class="btn-action edit" onclick="editWahana('{{ w['id'] }}', '{{ w['nama'] }}', '{{ w['deskripsi'] }}', '{{ w['emoji'] }}', '{{ w['kategori'] }}', '{{ w['status'] }}', {{ w['wait_time'] }})">
+                    ✏️ Edit
+                </button>
+                <a href="/delete_wahana/{{ w['id'] }}" class="btn-action delete" onclick="return confirm('Hapus wahana ini?')">
+                    🗑️ Hapus
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if not wahana %}
+    <div class="empty-state">
+        <span>🎢</span>
+        <p>Belum ada wahana. Tambah wahana pertama Anda!</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✏️ Edit Wahana</h3>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <form method="POST" action="/edit_wahana">
+            <input type="hidden" name="id" id="editId">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>🎢 Nama Wahana</label>
+                    <input type="text" name="nama" id="editNama" required>
+                </div>
+                <div class="form-group">
+                    <label>😀 Emoji</label>
+                    <input type="text" name="emoji" id="editEmoji" required>
+                </div>
+                <div class="form-group full-width">
+                    <label>📝 Deskripsi</label>
+                    <input type="text" name="deskripsi" id="editDeskripsi" required>
+                </div>
+                <div class="form-group">
+                    <label>🏷️ Kategori</label>
+                    <select name="kategori" id="editKategori">
+                        <option value="dry">🌊 Wahana Dry</option>
+                        <option value="water">💧 Wahana Water</option>
+                        <option value="indoor">🏠 Indoor</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>⚙️ Status</label>
+                    <select name="status" id="editStatus">
+                        <option value="available">✅ Tersedia</option>
+                        <option value="maintenance">🔧 Dalam Perbaikan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>⏱️ Wait Time</label>
+                    <input type="number" name="wait_time" id="editWaitTime" value="0">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Batal</button>
+                <button type="submit" class="btn-primary">💾 Simpan Perubahan</button>
+            </div>
+        </form>
+</div>
+</div>
+
+<script>
+function editWahana(id, nama, deskripsi, emoji, kategori, status, waitTime) {
+    document.getElementById('editId').value = id;
+    document.getElementById('editNama').value = nama;
+    document.getElementById('editDeskripsi').value = deskripsi;
+    document.getElementById('editEmoji').value = emoji;
+    document.getElementById('editKategori').value = kategori;
+    document.getElementById('editStatus').value = status;
+    document.getElementById('editWaitTime').value = waitTime;
+    document.getElementById('editModal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('editModal').classList.remove('open');
+}
+
+document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+</script>
+
+{% endblock %}

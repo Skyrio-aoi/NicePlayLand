@@ -1,0 +1,188 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="hero">
+    <div class="hero-icon">🎢</div>
+    <h1>Wahana Nice PlayLand</h1>
+    <p>8 Wahana seru dan aman untuk keluarga di Indramayu!</p>
+</div>
+
+<!-- Status Banner -->
+<div class="status-banner">
+    <div class="status-dot"></div>
+    <span>Semua Wahana OPERATIONAL</span>
+</div>
+
+<!-- Category Tabs -->
+<div class="category-tabs">
+    <button class="tab active" onclick="filterWahana('all')">Semua</button>
+    <button class="tab" onclick="filterWahana('dry')">🌊 Wahana Dry</button>
+    <button class="tab" onclick="filterWahana('water')">💧 Wahana Air</button>
+    <button class="tab" onclick="filterWahana('indoor')">🏠 Indoor</button>
+</div>
+
+<!-- Wahana Grid -->
+<div class="wahana-grid">
+    
+    <div class="wahana-card" data-category="dry">
+        <div class="wahana-image">
+            <div class="wahana-emoji">🎢</div>
+        </div>
+        <div class="wahana-content">
+            <span class="status-tag available">✅ Tersedia</span>
+            <h4>Roller Coaster</h4>
+            <p>Sensasi多人terbang yang mendancurkan! Track sepanjang 300 meter dengan tikungan tajam.</p>
+            <div class="wahana-info">
+                <span>👤 Tinggi min 120cm</span>
+                <span>⚡ Extra Energy</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="wahana-card" data-category="dry">
+        <div class="wahana-image">
+            <div class="wahana-emoji">🎠</div>
+        </div>
+        <div class="wahana-content">
+            <span class="status-tag available">✅ Tersedia</span>
+            <h4>Carousel</h4>
+            <p>Wahana klasik favorit keluarga dengan 24 kursi lucu dan musik meriah.</p>
+            <div class="wahana-info">
+                <span>👤 Semua Umur</span>
+                <span>💚 Family Friendly</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="wahana-card" data-category="dry">
+        <div class="wahana-image">
+            <div class="wahana-emoji">🎡</div>
+        </div>
+        <div class="wahana-content">
+            <span class="status-tag available">✅ Tersedia</span>
+            <h4>Ferris Wheel</h4>
+            <p>Pemandangan sawah dan gunung dari atas dengan 16 cabin yang nyaman.</p>
+            <div class="wahana-info">
+                <span>👤 Semua Umur</span>
+                <span>📸 Photo Spot</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="wahana-card" data-category="water">
+        <div class="wahana-image">
+            <div class="wahana-emoji">🛶</div>
+        </div>
+        <div class="wahana-content">
+            <span class="status-tag available">✅ Tersedia</span>
+            <h4>Boat Ride</h4>
+            <p>Petualangan danau dengan boat untuk 8 orang. Seru!</p>
+            <div class="wahana-info">
+                <span>👤 Tinggi min 100cm</span>
+                <span>🌊 Adventure</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="wahana-card" data-category="indoor">
+        <div class="wahana-image">
+            <div class="wahana-emoji">🎪</div>
+        </div>
+        <div class="wahana-content">
+            <span class="status-tag available">✅ Tersedia</span>
+            <h4>House of Horror</h4>
+            <p>Rumah horor dengan efek special yang membuat jantung berdetak kencang!</p>
+            <div class="wahana-info">
+                <span>👤 Tinggi min 140cm</span>
+                <span>👻 Thriller</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="wahana-card" data-category="indoor">
+        <div class="wahana-image">
+            <div class="wahana-emoji">🏰</div>
+        </div>
+        <div class="wahana-content">
+            <span class="status-tag available">✅ Tersedia</span>
+            <h4>Fun House</h4>
+            <p>Playground dalam ruangan dengan sliding, climbing, dan games seru untuk anak.</p>
+            <div class="wahana-info">
+                <span>👶 Untuk Anak</span>
+                <span>🎮 Playground</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="wahana-card" data-category="indoor">
+        <div class="wahana-image">
+            <div class="wahana-emoji">🎯</div>
+        </div>
+        <div class="wahana-content">
+            <span class="status-tag available">✅ Tersedia</span>
+            <h4>Arcade Zone</h4>
+            <p>Game center dengan berbagai mesin arcade terkini.</p>
+            <div class="wahana-info">
+                <span>👤 Semua Umur</span>
+                <span>🕹️ Gaming</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="wahana-card" data-category="water">
+        <div class="wahana-image">
+            <div class="wahana-emoji">🌊</div>
+        </div>
+        <div class="wahana-content">
+            <span class="status-tag maintenance">🔧 Dalam Perbaikan</span>
+            <h4>Water Boom</h4>
+            <p>Kolam air dengan berbagai seluncur water slide yang seru. Segera hadir!</p>
+            <div class="wahana-info">
+                <span>👤 Tinggi min 110cm</span>
+                <span>💦 Fun Water</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Events Section -->
+<div class="card events-section">
+    <h3>📅 Event Mendatang</h3>
+    <div class="events-timeline">
+        <div class="event-card">
+            <div class="event-date-badge">20 APR</div>
+            <div class="event-details">
+                <h4>🎉 Easter Festival</h4>
+                <p>Event Easter dengan寻找 telur dan hadiah menarik!</p>
+            </div>
+        </div>
+        <div class="event-card">
+            <div class="event-date-badge">1 MEI</div>
+            <div class="event-details">
+                <h4>🎌 Labour Day Promo</h4>
+                <p>Diskon 20% untuk semua ticket masuk!</p>
+            </div>
+        </div>
+        <div class="event-card">
+            <div class="event-date-badge">15 AGT</div>
+            <div class="event-details">
+                <h4>🇮🇩 Merdeka Festival</h4>
+                <p>Event peringatan kemerdekaan dengan berbagai games!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterWahana(category) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.querySelectorAll('.wahana-card').forEach(card => {
+        card.style.display = (category === 'all' || card.dataset.category === category) ? 'block' : 'none';
+    });
+}
+</script>
+
+{% endblock %}

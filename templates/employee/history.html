@@ -1,0 +1,46 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="hero">
+    <span style="font-size: 60px;">📋</span>
+    <h1>Riwayat Absensi</h1>
+    <p>Histori absensi GPS kamu</p>
+</div>
+
+<div class="card">
+    {% if data and data|length > 0 %}
+    <div class="history-table">
+        <div class="table-header">
+            <span>Tanggal</span>
+            <span>Jam</span>
+            <span>Jarak</span>
+            <span>Status</span>
+        </div>
+        
+        {% for a in data %}
+        <div class="table-row">
+            <span>{{ a['tanggal'] }}</span>
+            <span>{{ a['jam'] }}</span>
+            <span>
+                {% if a['jarak'] %}{{ a['jarak']|round(1) }}m{% else %}-{% endif %}
+            </span>
+            <span>
+                {% if a['status'] == 'Dalam Area' %}
+                    <span class="badge valid">✅ Dalam Area</span>
+                {% else %}
+                    <span class="badge used">❌ Luar Area</span>
+                {% endif %}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <span>📭</span>
+        <p>Belum ada data absensi</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

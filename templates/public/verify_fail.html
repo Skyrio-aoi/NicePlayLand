@@ -1,0 +1,15 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="verify-card error">
+    <div class="verify-icon">❌</div>
+    <h2>Verifikasi Gagal</h2>
+    <p class="subtitle">{{ message }}</p>
+    
+    <div class="error-actions">
+        <a href="/scan" class="btn-primary w-auto" style="padding: 14px 30px;">📷 Scan Ulang</a>
+    </div>
+</div>
+
+{% endblock %}

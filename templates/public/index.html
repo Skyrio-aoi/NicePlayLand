@@ -1,0 +1,168 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="hero">
+    <div class="hero-content">
+        <div class="hero-badge">🎡</div>
+        <h1>Nice PlayLand</h1>
+        <p>Tempat bermain keluarga terbesar di Pangkah, Indramayu!</p>
+        
+        <div class="hero-buttons">
+            <a href="/ticket" class="btn-primary btn-lg">
+                <span>🎟️</span> Beli Tiket
+            </a>
+            <a href="/explore" class="btn-secondary btn-lg">
+                <span>🎢</span> Lihat Wahana
+            </a>
+        </div>
+        
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <span class="stat-number">8+</span>
+                <span class="stat-label">Wahana</span>
+            </div>
+            <div class="hero-stat">
+                <span class="stat-number">35K</span>
+                <span class="stat-label">Harga Tiket</span>
+            </div>
+            <div class="hero-stat">
+                <span class="stat-number">10J</span>
+                <span class="stat-label">Pengunjung</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="park-info">
+    <div class="info-card">
+        <div class="info-icon">📍</div>
+        <h4>Lokasi</h4>
+        <p>Jl. Soekarno Hatta No.14a<br>Pekayangan Jaya, Indramayu<br><a href="https://www.google.com/maps/search/?api=1&query=-6.353323445991585,108.32058969370127" target="_blank">Buka di Maps ↗</a></p>
+    </div>
+    <div class="info-card">
+        <div class="info-icon">🕐</div>
+        <h4>Buka Setiap Hari</h4>
+        <p>08.00 - 18.00 WIB</p>
+    </div>
+    <div class="info-card">
+        <div class="info-icon">📱</div>
+        <h4>Kontak</h4>
+        <p>WA: 0821-9999-0000<br>Instagram: @niceplayland_id</p>
+    </div>
+    <div class="info-card">
+        <div class="info-icon">🎟️</div>
+        <h4>Harga Tiket</h4>
+        <p>Rp 35.000/orang<br><span class="highlight">Include semua wahana!</span></p>
+    </div>
+</div>
+
+<div class="promo-banner">
+    <div class="promo-badge">🔥 PROMO</div>
+    <div class="promo-content">
+        <h3>Kode Promo Khusus Indramayu!</h3>
+        <p>Gunakan kode <strong>INDRAMAYU25</strong> untuk diskon 25% atau <strong>PLAYLAND20</strong> untuk diskon 20%!</p>
+    </div>
+</div>
+
+<div class="features">
+    <div class="feature-card">
+        <div class="feature-icon">🎢</div>
+        <h4>8+ Wahana Seru</h4>
+        <p>Roller Coaster, Carousel, Ferris Wheel, Boat Ride, House of Horror, dan lain-lain</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h4>QR Digital</h4>
+        <p>Sistem tiket berbasis QR code modern - mudah dan cepat</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">💳</div>
+        <h4>Pembayaran Online</h4>
+        <p>Via Transfer, E-Wallet (GoPay, OVO, Dana), atau QRIS</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">🅿️</div>
+        <h4>Parkir Luas</h4>
+        <p>Area parking yang luas dan aman untuk kendaraan Anda</p>
+    </div>
+</div>
+
+<div class="card location-card">
+    <div class="card-header">
+        <h3>📍 Lokasi Kami</h3>
+        <a href="https://www.google.com/maps/search/?api=1&query=-6.353323445991585,108.32058969370127" target="_blank" class="map-link">
+            🌐 Buka di Google Maps ↗
+        </a>
+    </div>
+    <div id="map" style="height: 350px; border-radius: 16px;"></div>
+    <div style="text-align: center; margin-top: 10px;">
+        <a href="https://www.google.com/maps/search/?api=1&query=-6.353323445991585,108.32058969370127" target="_blank" style="color: var(--primary); font-size: 13px; text-decoration: none;">
+            📏 Klik untuk lihat di Google Maps →
+        </a>
+    </div>
+    <p class="location-text">
+        <span class="location-icon">📍</span>
+        <strong>Nice PlayLand</strong><br>
+        Jl. Soekarno Hatta No.14a, Pekayangan Jaya<br>
+        Kec. Indramayu, Kab. Indramayu, Jawa Barat 45211
+    </p>
+    <p style="text-align: center; margin-top: 15px;">
+        <a href="https://www.google.com/maps/search/?api=1&query=-6.353323445991585,108.32058969370127" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 25px; text-decoration: none; font-weight: 600;">
+            📍 Navigasi ke Lokasi
+        </a>
+    </p>
+</div>
+
+<div class="card social-card">
+    <div class="card-header">
+        <h3>📱 Follow Kami</h3>
+    </div>
+    <div class="social-links">
+        <a href="https://instagram.com/niceplayland" class="social-item instagram" target="_blank">
+            <span class="social-icon">📸</span>
+            <span>Instagram</span>
+        </a>
+        <a href="https://facebook.com/NicePlayLandTegal" class="social-item facebook" target="_blank">
+            <span class="social-icon">📘</span>
+            <span>Facebook</span>
+        </a>
+        <a href="https://wa.me/6282199990000" class="social-item whatsapp" target="_blank">
+            <span class="social-icon">💬</span>
+            <span>WhatsApp</span>
+        </a>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const parkLat = -6.353323445991585;
+const parkLng = 108.32058969370127;
+
+let map = L.map('map').setView([parkLat, parkLng], 17);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+}).addTo(map);
+
+// Custom marker icon
+const playlandIcon = L.divIcon({
+    html: '<div style="font-size: 40px;">🎡</div>',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40]
+});
+
+const marker = L.marker([parkLat, parkLng], {icon: playlandIcon}).addTo(map);
+marker.bindPopup("<div class='custom-popup' style='text-align: center;'><b>🎡 Nice PlayLand</b><br><small>Jl. Soekarno Hatta No.14a</small><br><small>Pekayangan Jaya, Indramayu</small><br><a href='https://www.google.com/maps/search/?api=1&query=-6.353323445991585,108.32058969370127' target='_blank'>🌐 Buka Maps</a></div>").openPopup();
+
+// Also add a circle to show the area
+L.circle([parkLat, parkLng], {
+    color: '#10b981',
+    fillColor: '#10b981',
+    fillOpacity: 0.1,
+    radius: 150
+}).addTo(map);
+</script>
+
+{% endblock %}

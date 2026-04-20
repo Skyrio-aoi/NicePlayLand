@@ -1,0 +1,73 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="hero">
+    <span class="icon-xxl">🎟️</span>
+    <h1>Riwayat Pembelian Tiket</h1>
+    <p>Semua pembelian ticket kamu di Nice PlayLand</p>
+</div>
+
+{% if tickets and tickets|length > 0 %}
+<div class="stats">
+    <div class="stat-card purple">
+        <h3>Total Beli</h3>
+        <p>{{ tickets|length }}</p>
+    </div>
+    <div class="stat-card green">
+        <h3>Sudah Digunakan</h3>
+        <p>{{ tickets|selectattr('status', 'equalto', 'used')|list|length }}</p>
+    </div>
+    <div class="stat-card cyan">
+        <h3>Belum Digunakan</h3>
+        <p>{{ tickets|selectattr('status', 'equalto', 'valid')|list|length }}</p>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📋 Daftar Tiket</h3>
+    <div class="tickets-list">
+        {% for t in tickets %}
+        <div class="ticket-item">
+            <div class="ticket-info">
+                <div class="ticket-id">🎫 {{ t['id'][:16] }}...</div>
+                <div class="ticket-desc">
+                    <span>👤 {{ t['nama'] }}</span>
+                    <span>🎟️ {{ t['jumlah'] }} tiket</span>
+                </div>
+            </div>
+            <div class="ticket-status">
+                {% if t['status'] == 'used' %}
+                <span class="badge used">✅ Sudah Digunakan</span>
+                {% else %}
+                <span class="badge valid">🎫 Belum Digunakan</span>
+                {% if session.get('role') == 'admin' %}
+                <a href="/verify/{{ t['id'] }}" class="btn btn-green">Gunakan Tiket</a>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <h3>📝 Cara Menggunakan Tiket</h3>
+    <ol style="color: var(--text-secondary); padding-left: 20px; line-height: 2;">
+        <li>Klik tombol <strong>"Gunakan Tiket"</strong> di samping ticket yang belum digunakan</li>
+        <li>Tunjukkan QR code saat masuk wahana</li>
+        <li>QR code hanya bisa digunakan sekali</li>
+        <li>Simpan bukticreenshot jika perlu</li>
+    </ol>
+</div>
+
+{% else %}
+<div class="empty-card">
+    <span style="font-size: 70px;">🎫</span>
+    <h2>Belum Ada Pembelian</h2>
+    <p>Anda belum pernah membeli ticket</p>
+    <a href="/ticket" class="btn btn-primary w-auto" style="padding: 14px 30px;">🎟️ Beli Tiket Sekarang</a>
+</div>
+{% endif %}
+
+{% endblock %}

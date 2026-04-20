@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nice PlayLand</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎡</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nice PlayLand - Theme park terbesar di Indramayu dengan 8+ wahana seru untuk keluarga">
+    <meta name="theme-color" content="#7c3aed">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar glass">
+    <div class="nav-brand">
+        <a href="/" class="brand">
+            <span class="brand-icon">🎡</span>
+            <span class="brand-text">Nice PlayLand</span>
+        </a>
+    </div>
+    <div class="nav-menu">
+        <div class="nav-links">
+            <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                <span>🏠</span> Beranda
+            </a>
+            <a href="/ticket" class="nav-link {% if request.path == '/ticket' %}active{% endif %}">
+                <span>🎟️</span> Tiket
+            </a>
+            <a href="/explore" class="nav-link {% if request.path == '/explore' %}active{% endif %}">
+                <span>🎢</span> Wahana
+            </a>
+            <a href="/gallery" class="nav-link {% if request.path == '/gallery' %}active{% endif %}">
+                <span>📸</span> Gallery
+            </a>
+
+            {% if session.get('role') == 'employee' %}
+                <a href="/absensi" class="nav-link {% if request.path == '/absensi' %}active{% endif %}">
+                    <span>📍</span> Absen
+                </a>
+                <a href="/history" class="nav-link {% if request.path == '/history' %}active{% endif %}">
+                    <span>📋</span> Riwayat
+                </a>
+                <a href="/scan" class="nav-link {% if request.path == '/scan' %}active{% endif %}">
+                    <span>📷</span> Scan
+                </a>
+            {% endif %}
+
+            {% if session.get('role') == 'admin' %}
+                <a href="/scan" class="nav-link {% if request.path == '/scan' %}active{% endif %}">
+                    <span>📷</span> Scan
+                </a>
+                <a href="/admin" class="nav-link {% if request.path == '/admin' %}active{% endif %}">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="/manage_wahana" class="nav-link {% if request.path == '/manage_wahana' %}active{% endif %}">
+                    <span>🎢</span> Wahana
+                </a>
+                <a href="/admin_absensi" class="nav-link {% if request.path == '/admin_absensi' %}active{% endif %}">
+                    <span>📍</span> Absensi
+                </a>
+                <a href="/users" class="nav-link {% if request.path == '/users' %}active{% endif %}">
+                    <span>👥</span> Akun
+                </a>
+            {% endif %}
+            
+            {% if session.get('role') == 'user' %}
+                <a href="/my-tickets" class="nav-link {% if request.path == '/my-tickets' %}active{% endif %}">
+                    <span>📋</span> Tiket Saya
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="nav-actions">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Ganti Tema">
+            <span class="theme-icon">🌙</span>
+        </button>
+        {% if session.get('user') %}
+            <div class="user-menu">
+                <span class="user-avatar">
+                    {% if session.get('role') == 'admin' %}👑{% elif session.get('role') == 'employee' %}👨‍💼{% else %}👤{% endif %}
+                </span>
+                <span class="user-name">{{ session['user'] }}</span>
+            </div>
+            <a href="/logout" class="logout-btn">
+                <span>🚪</span> Keluar
+            </a>
+        {% else %}
+            <a href="/register" class="btn-auth">
+                <span>📝</span> Daftar
+            </a>
+            <a href="/login" class="btn-auth primary">
+                <span>🔐</span> Login
+            </a>
+        {% endif %}
+    </div>
+</nav>
+
+<!-- MOBILE MENU TOGGLE -->
+<button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+    <span class="hamburger"></span>
+</button>
+
+<!-- CONTENT -->
+<div class="container">
+    {% if session.get('welcome') %}
+    <div class="welcome-toast" id="welcomeToast">
+        <div class="toast-content">
+            <span class="toast-icon">🎉</span>
+            <div class="toast-text">
+                <strong>{{ session.get('welcome') }}</strong>
+                {% if session.get('role') == 'admin' %}
+                <p>Kelola semua fitur dari menu dashboard</p>
+                {% elif session.get('role') == 'employee' %}
+                <p>Absensi dan scan tiket tersedia</p>
+                {% else %}
+                <p>Beli tiket dan nikmati semua wahana!</p>
+                {% endif %}
+            </div>
+            <button class="toast-close" onclick="closeToast()">×</button>
+        </div>
+    </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+</div>
+
+<!-- FLOATING CHAT BUTTON -->
+<div class="chat-float" onclick="toggleChat()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+</div>
+
+<div class="chat-widget" id="chatWidget">
+    <div class="chat-header">
+        <div class="chat-header-info">
+            <div class="chat-avatar">🎡</div>
+            <div>
+                <span class="chat-title">Nice PlayLand CS</span>
+                <span class="chat-status">
+                    <span class="status-dot"></span> Online
+                </span>
+            </div>
+        </div>
+        <button onclick="toggleChat()" class="close-chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="chat-bot-msg">
+            <span class="chat-msg-icon">👋</span>
+            <span>Halo! Ada yang bisa kami bantu?</span>
+        </div>
+    </div>
+    <div class="chat-quick-actions">
+        <button onclick="quickReply('tiket')">🎟️ Beli Tiket</button>
+        <button onclick="quickReply('harga')">💰 Harga</button>
+        <button onclick="quickReply('lokasi')">📍 Lokasi</button>
+    </div>
+    <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Tulis pesan..." onkeypress="handleChatKey(event)">
+        <button onclick="sendChat()" class="send-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-brand">
+            <span class="footer-icon">🎡</span>
+            <span>Nice PlayLand</span>
+        </div>
+        <p class="footer-tagline">Theme park keluarga terbesar di Indramayu</p>
+        <div class="footer-links">
+            <a href="/">Beranda</a>
+            <a href="/ticket">Tiket</a>
+            <a href="/explore">Wahana</a>
+            <a href="https://wa.me/6282199990000">Hubungi</a>
+        </div>
+        <p class="footer-copy">© 2024 Nice PlayLand. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+// Toast/ Welcome Message
+function closeToast() {
+    const toast = document.getElementById('welcomeToast');
+    if(toast) {
+        toast.style.animation = 'closeToast 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    }
+}
+setTimeout(() => closeToast(), 8000);
+
+// Dark Mode Theme
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    document.querySelector('.theme-icon').textContent = isDark ? '☀️' : '🌙';
+}
+if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+    document.querySelector('.theme-icon').textContent = '☀️';
+}
+
+// Mobile Menu
+function toggleMobileMenu() {
+    document.querySelector('.nav-links').classList.toggle('active');
+    document.querySelector('.mobile-menu-toggle').classList.toggle('active');
+}
+
+// Chat Widget
+const responses = {
+    'tiket': '🎟️ Untuk beli ticket, klik menu "Tiket" ya!\n\n💰 Harga: Rp 35.000/orang\n✅ Include semua wahana!',
+    'harga': '💰 Harga Tiket:\n\n• Rp 35.000/orang\n• Include semua wahana\n• Tidak ada biaya tambahan\n\n🔥 Promo: INDRAMAYU25 (25%) atau PLAYLAND20 (20%)',
+    'lokasi': '📍 Lokasi Nice PlayLand:\n\n🏠 Jl. Soekarno Hatta No.14a\n📌 Pekayangan Jaya, Kec. Indramayu\n📌 Kab. Indramayu, Jawa Barat 45211\n\n🌐 Buka: maps.app.goo.gl/J8WC+M7',
+    'jam': '🕐 Jam Operasional:\n\nSetiap hari: 08.00 - 18.00 WIB\n\n✅ Semua wahana beroperasi!',
+    'wahana': '🎢 8 Wahana Seru:\n\n1. 🎢 Roller Coaster\n2. 🎠 Carousel\n3. 🎡 Ferris Wheel\n4. ⛵ Boat Ride\n5. 👻 House of Horror\n6. 🎪 Fun House\n7. 🕹️ Arcade Zone\n8. 💦 Water Boom',
+    'buka': '✅ Info Wahana:\n\nSemua wahana beroperasi normal!\n\n🎡 Nice PlayLand siap menyambut Anda!',
+    'help': '🎯 Menu Utama:\n\n• 🎟️ Beli Tiket\n• 🎢 Lihat Wahana\n• 📸 Gallery Foto\n• 📍 Lokasi\n• 💬 Hubungi CS',
+    'promo': '🔥 Kode Promo:\n\n• INDRAMAYU25 → Diskon 25%\n• PLAYLAND20 → Diskon 20%\n• HEMAT50 → Diskon 50% (terbatas!)\n\nGunakan saat checkout ya!',
+    'wa': '💬 Hubungi WhatsApp:\n\nwa.me/6282199990000\n\nKami siap membantu!',
+    'contact': '📞 Kontak Kami:\n\n• 💬 WhatsApp: 0821-9999-0000\n• 📸 Instagram: @niceplayland_id\n• 📘 Facebook: NicePlayLandIndramayu'
+};
+
+function toggleChat() {
+    document.getElementById('chatWidget').classList.toggle('open');
+}
+
+function handleChatKey(e) {
+    if (e.key === 'Enter') sendChat();
+}
+
+function quickReply(topic) {
+    document.getElementById('chatInput').value = topic;
+    sendChat();
+}
+
+function sendChat() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim().toLowerCase();
+    if (!msg) return;
+    
+    const container = document.getElementById('chatMessages');
+    container.innerHTML += `<div class="chat-user-msg">${input.value}</div>`;
+    
+    let reply = 'Maaf, coba ketik: Tiket, Harga, Lokasi, Jam, Wahana, Promo, Help';
+    for (const key in responses) {
+        if (msg.includes(key)) { reply = responses[key]; break; }
+    }
+    
+    setTimeout(() => {
+        container.innerHTML += `<div class="chat-bot-msg"><span class="chat-msg-icon">🎡</span><span>${reply}</span></div>`;
+        container.scrollTop = container.scrollHeight;
+    }, 500);
+    
+    input.value = '';
+    container.scrollTop = container.scrollHeight;
+}
+</script>
+
+</body>
+</html>

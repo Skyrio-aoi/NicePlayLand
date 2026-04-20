@@ -1,0 +1,101 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon">📝</div>
+            <h2>Daftar Akun</h2>
+            <p class="auth-subtitle">Buat akun baru untuk beli tiket</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-error">
+            <span>⚠️</span> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" class="auth-form">
+            <div class="input-group">
+                <label>👤 Nama Lengkap</label>
+                <input type="text" name="nama_lengkap" placeholder="Contoh: Ahmad Rizki" required>
+            </div>
+            <div class="input-group">
+                <label>👨‍💻 Username</label>
+                <input type="text" name="username" placeholder="Contoh: ahmad123" required>
+            </div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>📧 Email (Opsional)</label>
+                    <input type="email" name="email" placeholder="email@email.com">
+                </div>
+                <div class="input-group">
+                    <label>📱 No HP (Opsional)</label>
+                    <input type="text" name="no_hp" placeholder="0821xxxxx">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>🔒 Password</label>
+                <div class="password-input">
+                    <input type="password" name="password" placeholder="Minimal 4 karakter" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-block">
+                <span>🚀</span> Daftar Sekarang
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Sudah punya akun? <a href="/login" class="link-primary">Login</a></p>
+        </div>
+        
+        <div class="note-section">
+            <span class="note-icon">ℹ️</span>
+            <p>Setelah daftar, Anda akan mendapat role <strong>User</strong> dan bisa membeli ticket. Untuk menjadi Karyawan atau Admin, hubungi administrator.</p>
+        </div>
+    </div>
+    
+    <div class="auth-info-card">
+        <div class="info-section">
+            <h3>🎡 Bergabung dengan Nice PlayLand!</h3>
+            <p>Daftar sekarang dan nikmati berbagai wahana seru bersama keluarga.</p>
+        </div>
+        
+        <div class="info-section">
+            <h4>🎁 Benefit Daftar:</h4>
+            <ul class="feature-list">
+                <li>
+                    <span class="check">✓</span>
+                    <span>Beli ticket online dengan mudah</span>
+                </li>
+                <li>
+                    <span class="check">✓</span>
+                    <span>Hasilkan QR code langsung</span>
+                </li>
+                <li>
+                    <span class="check">✓</span>
+                    <span>Lihat riwayat pembelian</span>
+                </li>
+                <li>
+                    <span class="check">✓</span>
+                    <span>Dapat promo eksklusif member</span>
+                </li>
+                <li>
+                    <span class="check">✓</span>
+                    <span>Tidak perlu print ticket</span>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="info-section cta-section">
+            <p>Sudah punya akun?</p>
+            <a href="/login" class="btn-secondary btn-block">
+                <span>🔐</span> Login Sekarang
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

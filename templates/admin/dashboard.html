@@ -1,0 +1,217 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="icon-xl">📊</span>
+        <div>
+            <h2>Dashboard Admin</h2>
+            <p class="text-muted">Kelola dan monitor Nice PlayLand</p>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card gradient-purple">
+        <div class="stat-icon">🎟️</div>
+        <div class="stat-content">
+            <span class="stat-label">Total Tiket</span>
+            <span class="stat-value">{{ total }}</span>
+        </div>
+    </div>
+    <div class="stat-card gradient-green">
+        <div class="stat-icon">✅</div>
+        <div class="stat-content">
+            <span class="stat-label">Tiket Used</span>
+            <span class="stat-value">{{ used }}</span>
+        </div>
+    </div>
+    <div class="stat-card gradient-cyan">
+        <div class="stat-icon">🎫</div>
+        <div class="stat-content">
+            <span class="stat-label">Tiket Valid</span>
+            <span class="stat-value">{{ valid }}</span>
+        </div>
+    </div>
+    <div class="stat-card gradient-orange">
+        <div class="stat-icon">💰</div>
+        <div class="stat-content">
+            <span class="stat-label">Pendapatan</span>
+            <span class="stat-value">Rp {{ total_pendapatan }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card chart-card">
+        <div class="card-header">
+            <h3>📈 Grafik Statistik Tiket</h3>
+        </div>
+        <div class="chart-container">
+            <canvas id="ticketChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="card chart-card">
+        <div class="card-header">
+            <h3>📊 Distribusi Tiket</h3>
+        </div>
+        <div class="chart-container pie-container">
+            <canvas id="pieChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>📋 Data Tiket Terbaru</h3>
+        <a href="/manage_ticket" class="view-all-link">Lihat Semua →</a>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nama Pembeli</th>
+                    <th>Jumlah</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in tickets[:10] %}
+                <tr>
+                    <td class="id-cell">{{ t['id'][:12] }}...</td>
+                    <td>
+                        <div class="user-cell">
+                            <span class="user-avatar">👤</span>
+                            {{ t['nama'] }}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="qty-badge">{{ t['jumlah'] }} Tiket</span>
+                    </td>
+                    <td>
+                        {% if t['status']=='used' %}
+                            <span class="badge used">✅ Used</span>
+                        {% else %}
+                            <span class="badge valid">🎫 Valid</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if t['status']=='used' %}
+                                <a href="/reset/{{ t['id'] }}" class="btn-action reset">🔄 Reset</a>
+                            {% endif %}
+                            <a href="/delete/{{ t['id'] }}" class="btn-action delete" onclick="return confirm('Hapus?')">🗑️</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <a href="/manage_ticket" class="quick-action-card">
+        <span class="action-icon">🎫</span>
+        <span class="action-label">Kelola Tiket</span>
+    </a>
+    <a href="/manage_wahana" class="quick-action-card">
+        <span class="action-icon">🎢</span>
+        <span class="action-label">Kelola Wahana</span>
+    </a>
+    <a href="/admin_absensi" class="quick-action-card">
+        <span class="action-icon">📍</span>
+        <span class="action-label">Absensi</span>
+    </a>
+    <a href="/users" class="quick-action-card">
+        <span class="action-icon">👥</span>
+        <span class="action-label">Kelola Akun</span>
+    </a>
+    <a href="/scan" class="quick-action-card">
+        <span class="action-icon">📷</span>
+        <span class="action-label">Scan Tiket</span>
+    </a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const total = {{ total }};
+const used = {{ used }};
+const valid = {{ valid }};
+
+// Bar Chart - Tiket per Bulan
+new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'Tiket Terjual',
+            data: [12, 19, 15, 25, used, valid],
+            backgroundColor: 'rgba(124, 58, 237, 0.7)',
+            borderColor: '#7c3aed',
+            borderWidth: 2,
+            borderRadius: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 5 } }
+        }
+    }
+});
+
+// Pie Chart - Distribusi
+new Chart(document.getElementById('pieChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Used', 'Valid'],
+        datasets: [{
+            data: [used, valid],
+            backgroundColor: ['#10b981', '#06b6d4'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { 
+            legend: { position: 'bottom' } 
+        }
+    }
+});
+
+// Line Chart - Trend
+new Chart(document.getElementById('ticketChart'), {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'Tiket Terjual',
+            data: [12, 19, 15, 25, 22, total],
+            borderColor: '#7c3aed',
+            backgroundColor: 'rgba(124, 58, 237, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#7c3aed',
+            pointRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+</script>
+
+{% endblock %}

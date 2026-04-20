@@ -1,0 +1,33 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="success-card">
+    <div class="success-icon">🎉</div>
+    <h2>Tiket Berhasil!</h2>
+    <p class="subtitle">Terima kasih, <strong>{{ username or nama }}</strong>!</p>
+    
+    <div class="ticket-details">
+        <div class="detail-row">
+            <span>🎟️ Jumlah Tiket</span>
+            <span>{{ jumlah }}</span>
+        </div>
+        <div class="detail-row">
+            <span>💰 Status</span>
+            <span class="badge success">Lunas</span>
+        </div>
+    </div>
+
+    <div class="qr-display">
+        <img src="/static/img/{{ qr_image }}" alt="QR Code">
+    </div>
+    
+    <p class="qr-note">📷 Tunjukkan QR ini saat masuk wahana</p>
+    
+    <div class="success-actions">
+        <a href="/" class="btn btn-green">🏠 Beranda</a>
+        <a href="/ticket" class="btn btn-primary w-auto">🎟️ Beli Lagi</a>
+    </div>
+</div>
+
+{% endblock %}

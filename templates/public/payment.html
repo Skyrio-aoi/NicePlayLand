@@ -1,0 +1,123 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="hero">
+    <div class="hero-content">
+        <span class="icon-xxl">💳</span>
+        <h1>Pembayaran</h1>
+        <p>Selesaikan pembayaran untuk mendapat QR code ticket</p>
+    </div>
+</div>
+
+<div class="payment-container">
+    <div class="payment-card">
+        <div class="payment-status" id="paymentStatus">
+            <div class="status-icon">⏳</div>
+            <h3>Menunggu Pembayaran</h3>
+            <p>Silakan pilih metode pembayaran</p>
+        </div>
+
+        <button id="pay-button" class="btn-primary btn-lg">
+            <span>💳</span> Buka Metode Pembayaran
+        </button>
+
+        <div class="payment-divider">
+            <span>atau pilih metode lain</span>
+        </div>
+
+        <div class="payment-methods">
+            <h4>💰 Metode Pembayaran Tersedia</h4>
+            <div class="methods-grid">
+                <div class="method-card">
+                    <span class="method-icon">🏦</span>
+                    <span class="method-name">Transfer Bank</span>
+                    <span class="method-banks">BCA, BRI, BSI</span>
+                </div>
+                <div class="method-card">
+                    <span class="method-icon">📱</span>
+                    <span class="method-name">E-Wallet</span>
+                    <span class="method-banks">GoPay, OVO, Dana</span>
+                </div>
+                <div class="method-card">
+                    <span class="method-icon">💳</span>
+                    <span class="method-name">QRIS</span>
+                    <span class="method-banks">Semua Bank</span>
+                </div>
+                <div class="method-card">
+                    <span class="method-icon">💳</span>
+                    <span class="method-name">Kartu Kredit</span>
+                    <span class="method-banks">Visa, Mastercard</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="payment-security">
+            <span class="security-icon">🔒</span>
+            <span>Pembayaran aman via <strong>Midtrans</strong></span>
+        </div>
+    </div>
+    
+    <div class="payment-info-card">
+        <div class="info-section">
+            <h4>📝 Cara Pembayaran</h4>
+            <ol class="steps-list">
+                <li>Klik tombol "Buka Metode Pembayaran"</li>
+                <li>Pilih metode pembayaran yang diinginkan</li>
+                <li>Ikuti instruksi pembayaran</li>
+                <li>Setelah pembayaran berhasil, QR code akan muncul</li>
+            </ol>
+        </div>
+        
+        <div class="info-section">
+            <h4>⏰ Batas Waktu Pembayaran</h4>
+            <div class="time-info">
+                <span class="time-icon">🕐</span>
+                <span>Pembayaran harus diselesaikan dalam 24 jam</span>
+            </div>
+        </div>
+        
+        <div class="info-section help-section">
+            <h4>❓ Butuh Bantuan?</h4>
+            <p>Hubungi customer service kami:</p>
+            <div class="help-contacts">
+                <a href="https://wa.me/6282199990000" class="help-btn">
+                    <span>💬</span> WhatsApp
+                </a>
+                <a href="tel:082199990000" class="help-btn">
+                    <span>📞</span> Telepon
+                </a>
+            </div>
+        </div>
+</div>
+</div>
+
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" 
+    data-client-key="Mid-client-yVM7aqXrYZ2yuMiT"></script>
+
+<script>
+const btn = document.getElementById('pay-button');
+const statusDiv = document.getElementById('paymentStatus');
+
+btn.onclick = function() {
+    statusDiv.innerHTML = '<div class="status-icon">⏳</div><h3>Memproses...</h3><p>Mohon tunggu sebentar</p>';
+    
+    snap.pay('{{ snap_token }}', {
+        onSuccess: function(result) {
+            statusDiv.innerHTML = '<div class="status-icon">✅</div><h3>Berhasil!</h3><p>Pembayaran berhasil diverifikasi</p>';
+            setTimeout(() => window.location.href = '/success', 1500);
+        },
+        onPending: function(result) {
+            statusDiv.innerHTML = '<div class="status-icon">⏳</div><h3>Menunggu Pembayaran</h3><p>Silakan selesaikan pembayaran</p>';
+        },
+        onError: function(result) {
+            statusDiv.innerHTML = '<div class="status-icon">❌</div><h3>Pembayaran Gagal</h3><p>Coba lagi atau hubungi CS</p>';
+        },
+        onClose: function() {
+            statusDiv.innerHTML = '<div class="status-icon">⚠️</div><h3>Dibatalkan</h3><p>Popup ditutup, klik tombol untuk mencoba lagi</p>';
+        }
+    });
+};
+</script>
+
+{% endblock %}

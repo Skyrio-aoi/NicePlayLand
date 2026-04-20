@@ -1,0 +1,207 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="hero">
+    <div class="hero-content">
+        <span class="icon-xxl">🎟️</span>
+        <h1>Beli Tiket Nice PlayLand</h1>
+        <p>Harga Rp 35.000 / orang - Include semua wahana di Indramayu!</p>
+    </div>
+</div>
+
+<div class="ticket-container">
+    <div class="ticket-form-card">
+        {% if error %}
+        <div class="alert alert-error">
+            <span>⚠️</span> {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="POST" id="ticketForm" class="ticket-form">
+            <div class="form-section">
+                <h3>👤 Informasi Pembeli</h3>
+                <div class="input-group">
+                    <label> Nama Lengkap</label>
+                    <input type="text" name="nama" value="{{ session.get('user', '') }}" readonly class="input-readonly">
+                    <small class="text-secondary">Nama otomatis dari akun login</small>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3>🎟️ Jumlah Tiket</h3>
+                <div class="input-group">
+                    <label> Jumlah Orang</label>
+                    <div class="quantity-selector">
+                        <button type="button" onclick="changeQty(-1)" class="qty-btn">−</button>
+                        <input type="number" name="jumlah" id="jumlah" value="1" min="1" max="50" readonly>
+                        <button type="button" onclick="changeQty(1)" class="qty-btn">+</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section promo-section">
+                <h3>🎫 Kode Promo (Opsional)</h3>
+                <div class="promo-input-wrapper">
+                    <input type="text" name="kode_promo" id="kodePromo" placeholder="Contoh: INDRAMAYU25">
+                    <button type="button" class="promo-btn" onclick="cekPromo()">
+                        <span>✓</span> Cek
+                    </button>
+                </div>
+                <p id="promoInfo" class="promo-message"></p>
+                
+                <div class="promo-suggestions">
+                    <span class="suggestion-label">Try:</span>
+                    <button type="button" class="promo-chip" onclick="applyPromo('INDRAMAYU25')">INDRAMAYU25</button>
+                    <button type="button" class="promo-chip" onclick="applyPromo('PLAYLAND20')">PLAYLAND20</button>
+                    <button type="button" class="promo-chip" onclick="applyPromo('HEMAT50')">HEMAT50</button>
+                </div>
+            </div>
+
+            <div class="price-summary">
+                <div class="price-header">
+                    <span>📊 Ringkasan Harga</span>
+                </div>
+                <div class="price-row">
+                    <span>Harga per tiket</span>
+                    <span>Rp 35.000</span>
+                </div>
+                <div class="price-row">
+                    <span>Jumlah</span>
+                    <span id="jumlahDisplay">1 orang</span>
+                </div>
+                <div class="price-row discount" id="diskonRow" style="display: none;">
+                    <span>Diskon</span>
+                    <span id="diskonDisplay">-20%</span>
+                </div>
+                <div class="price-total">
+                    <span>Total Bayar</span>
+                    <span id="totalDisplay">Rp 35.000</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-block">
+                <span>💳</span> Bayar Sekarang
+            </button>
+        </form>
+    </div>
+    
+    <div class="ticket-info-card">
+        <div class="info-section">
+            <h4>📋 Informasi Tiket</h4>
+            <ul class="info-list">
+                <li>
+                    <span class="check-icon">✅</span>
+                    Tiket berlaku untuk semua wahana
+                </li>
+                <li>
+                    <span class="check-icon">⏰</span>
+                    Tiket tidak expired
+                </li>
+                <li>
+                    <span class="check-icon">📱</span>
+                    Tunjukkan QR code saat masuk
+                </li>
+                <li>
+                    <span class="check-icon">🅿️</span>
+                    Include biaya parkir
+                </li>
+                <li>
+                    <span class="check-icon">🔄</span>
+                    Refund max 24 jam dengan bukti transfer
+                </li>
+            </ul>
+        </div>
+        
+        <div class="info-section">
+            <h4>📍 Lokasi Nice PlayLand</h4>
+            <p class="location-detail">
+                Jl. Soekarno Hatta No.14a<br>
+                Pekayangan Jaya, Kec. Indramayu<br>
+                Kab. Indramayu, Jawa Barat 45211
+            </p>
+            <a href="https://www.google.com/maps/search/?api=1&query=-6.353323445991585,108.32058969370127" target="_blank" class="map-link">
+                📍 Buka di Google Maps
+            </a>
+        </div>
+        
+        <div class="info-section contact-section">
+            <h4>📱 Butuh Bantuan?</h4>
+            <p>Hubungi kami:</p>
+            <a href="https://wa.me/6282199990000" class="contact-btn">
+                <span>💬</span> 0821-9999-0000
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+const HARGA = 35000;
+const jumlahInput = document.getElementById("jumlah");
+const promoInput = document.getElementById("kodePromo");
+const totalDisplay = document.getElementById("totalDisplay");
+const jumlahDisplay = document.getElementById("jumlahDisplay");
+const diskonRow = document.getElementById("diskonRow");
+const diskonDisplay = document.getElementById("diskonDisplay");
+const promoInfo = document.getElementById("promoInfo");
+
+const promos = {
+    'PLAYLAND20': { diskon: 20, pesan: '🎉 Diskon 20%! Selamat berhemat!' },
+    'INDRAMAYU25': { diskon: 25, pesan: '🎉 Diskon 25%! Promo khusus Indramayu!' },
+    'LIBURAN15': { diskon: 15, pesan: '🎉 Liburan Diskon 15%!' },
+    'HEMAT50': { diskon: 50, pesan: '🔥 SUPER DISKON 50%! Siapa cepat dia dapat!' },
+    'MEI2024': { diskon: 20, pesan: '🎉 Labour Day Promo 20%!' },
+    'WELCOME10': { diskon: 10, pesan: '👋 Welcome Discount 10%!' },
+    'PANGKAH25': { diskon: 25, pesan: '🎉 Warga Pangkah Diskon 25%!' },
+    'TEGAL15': { diskon: 15, pesan: '🎉 Diskon warga Tegal 15%!' },
+    'JATIBARU10': { diskon: 10, pesan: '🎉 Welcome from Jatibaru 10%!' }
+};
+
+let diskonPersen = 0;
+
+function changeQty(delta) {
+    let val = parseInt(jumlahInput.value) + delta;
+    if (val < 1) val = 1;
+    if (val > 50) val = 50;
+    jumlahInput.value = val;
+    hitungTotal();
+}
+
+function applyPromo(kode) {
+    promoInput.value = kode;
+    cekPromo();
+}
+
+function cekPromo() {
+    const kode = promoInput.value.trim().toUpperCase();
+    if (promos[kode]) {
+        diskonPersen = promos[kode].diskon;
+        promoInfo.textContent = '✅ ' + promos[kode].pesan;
+        promoInfo.className = 'promo-message valid';
+    } else if (kode) {
+        diskonPersen = 0;
+        promoInfo.textContent = '❌ Kode promo tidak valid';
+        promoInfo.className = 'promo-message invalid';
+    } else {
+        promoInfo.textContent = '';
+        promoInfo.className = 'promo-message';
+    }
+    hitungTotal();
+}
+
+function hitungTotal() {
+    const jumlah = parseInt(jumlahInput.value) || 1;
+    let total = jumlah * HARGA;
+    if (diskonPersen > 0) {
+        total = Math.round(total * (100 - diskonPersen) / 100);
+        diskonRow.style.display = 'flex';
+        diskonDisplay.textContent = '-' + diskonPersen + '%';
+    } else {
+        diskonRow.style.display = 'none';
+    }
+    totalDisplay.textContent = 'Rp ' + total.toLocaleString('id-ID');
+    jumlahDisplay.textContent = jumlah + ' orang';
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="hero">
+    <span style="font-size: 60px;">🔍</span>
+    <h1>Cek Tiket</h1>
+    <p>Masukkan nama untuk melihat riwayat pembelian ticket</p>
+</div>
+
+<div class="card" style="max-width: 450px; margin: 0 auto;">
+    <form method="POST">
+        <div class="input-group">
+            <label>👤 Nama Pembeli</label>
+            <input type="text" name="nama" placeholder="Masukkan nama lengkap" required>
+        </div>
+        <button type="submit" class="btn-primary">🔍 Cari Tiket</button>
+    </form>
+</div>
+
+<div class="card" style="margin-top: 30px;">
+    <h3>💡 Cara cek ticket:</h3>
+    <ol style="color: var(--text-secondary); padding-left: 20px; line-height: 2;">
+        <li>Masukkan nama yang digunakan saat membeli ticket</li>
+        <li>Ticket yang dibeli akan muncul di bawah</li>
+        <li>Jika sudah pernah membeli, akan terlihat status ticket</li>
+    </ol>
+</div>
+
+{% endblock %}

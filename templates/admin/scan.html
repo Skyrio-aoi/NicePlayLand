@@ -1,0 +1,39 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="page-header">
+    <span style="font-size: 60px;">📷</span>
+    <h2>Scan Tiket</h2>
+    <p class="text-muted">Arahkan kamera ke QR code ticket</p>
+</div>
+
+<div class="card scanner-card">
+    <div id="reader"></div>
+</div>
+
+<div class="card info-card">
+    <h4>📷 Cara Scan</h4>
+    <ol>
+        <li>Buka halaman scan ticket</li>
+        <li>Arahkan kamera ke QR code</li>
+        <li>Jika valid & belum digunakan, ticket langsung terverifikasi</li>
+    </ol>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+function onScanSuccess(decodedText) {
+    window.location.href = decodedText;
+}
+
+let scanner = new Html5QrcodeScanner("reader", {
+    fps: 10,
+    qrbox: { width: 250, height: 250 }
+});
+
+scanner.render(onScanSuccess);
+</script>
+
+{% endblock %}

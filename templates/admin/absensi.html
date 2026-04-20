@@ -1,0 +1,63 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="page-header">
+    <span style="font-size: 50px;">📊</span>
+    <h2>Monitoring Absensi Karyawan</h2>
+    <p class="text-muted">Lihat semua kehadiran karyawan</p>
+</div>
+
+<div class="stats">
+    <div class="stat-card" style="background: linear-gradient(135deg, #7c3aed, #a78bfa);">
+        <h3>Total Kehadiran</h3>
+        <p>{{ absensi|length }}</p>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #10b981, #34d399);">
+        <h3>Dalam Area</h3>
+        <p>{{ absensi|selectattr('status', 'equalto', 'Dalam Area')|list|length }}</p>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #f43f5e, #fb7185);">
+        <h3>Luar Area</h3>
+        <p>{{ absensi|rejectattr('status', 'equalto', 'Dalam Area')|list|length }}</p>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📋 Riwayat Absensi Semua Karyawan</h3>
+    
+    {% if absensi and absensi|length > 0 %}
+    <div class="absensi-table">
+        <div class="table-header">
+            <span>Karyawan</span>
+            <span>Tanggal</span>
+            <span>Jam</span>
+            <span>Jarak</span>
+            <span>Status</span>
+        </div>
+        
+        {% for a in absensi %}
+        <div class="table-row">
+            <span class="karyawan-name">{{ a['nama'] }}</span>
+            <span>{{ a['tanggal'] }}</span>
+            <span>{{ a['jam'] }}</span>
+            <span>{% if a['jarak'] %}{{ a['jarak']|round(1) }}m{% else %}-{% endif %}</span>
+            <span>
+                {% if a['status'] == 'Dalam Area' %}
+                    <span class="badge valid">✅ Dalam Area</span>
+                {% else %}
+                    <span class="badge used">❌ Luar Area</span>
+                {% endif %}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <span>📭</span>
+        <p>Belum ada data absensi</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

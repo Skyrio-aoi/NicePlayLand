@@ -1,0 +1,256 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="hero">
+    <span style="font-size: 60px;">📍</span>
+    <h1>Absensi GPS</h1>
+    <p>Ambil lokasi untuk absensi masuk kerja</p>
+    <button onclick="requestPermission()" class="btn-primary" style="width: auto; padding: 12px 25px; margin-top: 15px;">
+        🔓 Izinkan Akses Lokasi
+    </button>
+</div>
+
+<div class="card absensi-card">
+    {% if error %}
+    <div class="error-message">{{ error }}</div>
+    {% endif %}
+    
+    {% if success %}
+    <div class="success-message">{{ success }}</div>
+    {% endif %}
+    
+    <div class="office-location">
+        <h4>📍 Lokasi Kantor Nice PlayLand:</h4>
+        <p><strong>Jl. Soekarno Hatta No.14a</strong><br>
+        Pekayangan Jaya, Kec. Indramayu<br>
+        Kab. Indramayu, Jawa Barat 45211</p>
+        <a href="https://www.google.com/maps/search/?api=1&query=-6.353323445991585,108.32058969370127" target="_blank" style="display: inline-block; margin-top: 10px; padding: 10px 18px; background: var(--primary); color: white; border-radius: 20px; text-decoration: none; font-weight: 600;">
+            🌐 Buka Google Maps
+        </a>
+        <a href="https://www.google.com/maps/search/?api=1&query=-6.353323445991585,108.32058969370127&navigation" target="_blank" style="display: inline-block; margin-top: 10px; margin-left: 10px; padding: 10px 18px; background: #10b981; color: white; border-radius: 20px; text-decoration: none; font-weight: 600;">
+            🚗 Navigasi
+        </a>
+    </div>
+    
+    <button onclick="getLocation()" class="btn-primary absensi-btn">
+        📍 Ambil Lokasi & Absen
+    </button>
+    
+    <form method="POST" id="form">
+        <input type="hidden" name="lat" id="lat">
+        <input type="hidden" name="lng" id="lng">
+    </form>
+    
+    <p id="status" class="status">Pilih tombol di atas untuk absen...</p>
+    
+    <div class="manual-input">
+        <p>atau klik tombol ini buat langsung absen tanpa GPS:</p>
+        <button onclick="directSubmit()" style="width: 100%; background: linear-gradient(135deg, #10b981, #059669); margin-top: 10px;">
+            ✅ Langsung Absen Tanpa GPS
+        </button>
+    </div>
+</div>
+
+<div id="map" style="height: 400px; border-radius: 20px; margin-top: 25px;"></div>
+
+<div class="card info-card">
+    <h4>📋 Informasi Absensi</h4>
+    <ul>
+        <li>📍 Harus dalam radius 150m dari kantor</li>
+        <li>⏰ Jam kerja: 08.00 - 18.00 WIB</li>
+        <li>⚠️ Akurasi GPS mempengaruhi keberhasilan</li>
+    </ul>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// Koordinat Kantor Nice PlayLand (Jl. Soekarno Hatta No.14a, Indramayu)
+const OFFICE_LAT = -6.353323445991585;
+const OFFICE_LNG = 108.32058969370127;
+const MAX_DISTANCE = 150; // meter ( harus dalam 150m )
+
+let map = L.map('map').setView([OFFICE_LAT, OFFICE_LNG], 18);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+}).addTo(map);
+
+// Office marker with circle (radius area)
+let officeCircle = L.circle([OFFICE_LAT, OFFICE_LNG], {
+    color: '#10b981',
+    fillColor: '#10b981',
+    fillOpacity: 0.15,
+    radius: MAX_DISTANCE
+}).addTo(map);
+
+// Custom icon marker
+let kantor = L.marker([OFFICE_LAT, OFFICE_LNG], {
+    icon: L.divIcon({
+        html: '<div style="font-size: 45px; text-align: center;">🏢</div>',
+        iconSize: [45, 45],
+        iconAnchor: [22, 45],
+        popupAnchor: [0, -45]
+    })
+}).addTo(map)
+    .bindPopup("<b>🏢 Nice PlayLand</b><br><strong>Jl. Soekarno Hatta No.14a</strong><br>Pekayangan Jaya, Indramayu<br><br><a href='https://www.google.com/maps/search/?api=1&query=-6.353323445991585,108.32058969370127' target='_blank' style='color: #10b981; font-weight: 600;'>🌐 Buka Google Maps</a></div>")
+    .openPopup();
+
+let userMarker, line;
+let isSubmitted = false;
+
+function getDistance(lat1, lng1, lat2, lng2) {
+    let R = 6371000; // radius Earth in meters
+    let dLat = (lat2 - lat1) * Math.PI / 180;
+    let dLng = (lng2 - lng1) * Math.PI / 180;
+    let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+function requestPermission() {
+    if (!navigator.geolocation) {
+        alert("Browser tidak mendukung GPS!");
+        return;
+    }
+    
+    // Try to get permission on iOS
+    navigator.geolocation.getCurrentPosition(
+        function(pos) {
+            alert("✅ Izinkan GRANTED! Langsung diambil...");
+            getLocation();
+        },
+        function(error) {
+            if (error.code === 1) {
+                // Permission denied - need to enable in browser settings
+                alert("⚠️ Izinkan DITOLAK!\n\nCara mengaktifkan:\n1. Klik 🔒 / 📷 di address bar\n2. Atur 'Location' = ALLOW/IZINKAN\n3. Atau cek di Settings > Privacy > Location");
+            }
+            getLocation(); // Still try
+        }
+    );
+}
+
+function getLocation() {
+    document.getElementById("status").innerHTML = "📡 Mengambil lokasi GPS...";
+    document.getElementById("status").className = "status loading";
+
+    if (!navigator.geolocation) {
+        document.getElementById("status").innerHTML = "❌ GPS tidak didukung oleh browser ini!";
+        document.getElementById("status").className = "status error";
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(pos) {
+            let lat = pos.coords.latitude;
+            let lng = pos.coords.longitude;
+            let accuracy = pos.coords.accuracy;
+
+            document.getElementById("lat").value = lat;
+            document.getElementById("lng").value = lng;
+
+            // Calculate distance
+            let distance = getDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
+            
+            document.getElementById("status").innerHTML = `📍 Jarak: ${Math.round(distance)}m dari kantor`;
+            
+            if (distance <= MAX_DISTANCE) {
+                document.getElementById("status").className = "status success";
+                document.getElementById("status").innerHTML += " ✅ Dalam Area!";
+                
+                if (userMarker) map.removeLayer(userMarker);
+                userMarker = L.marker([lat, lng], {
+                    icon: L.divIcon({html: '👤', iconSize: [30, 30], iconAnchor: [15, 15]})
+                }).addTo(map)
+                    .bindPopup(`<b>👤 Lokasi Anda</b><br>Jarak: ${Math.round(distance)}m`);
+
+                if (line) map.removeLayer(line);
+                line = L.polyline([
+                    [lat, lng], [OFFICE_LAT, OFFICE_LNG]
+                ], {color: '#10b981', weight: 3, dashArray: '5, 10'}).addTo(map);
+
+                map.setView([lat, lng], 17);
+
+                if (!isSubmitted) {
+                    isSubmitted = true;
+                    setTimeout(() => document.getElementById("form").submit(), 1000);
+                }
+            } else {
+                document.getElementById("status").className = "status error";
+                document.getElementById("status").innerHTML += " ❌ Terlalu jauh! Maksimal 150m";
+            }
+        },
+        function(error) {
+            let msg = "Gagal mengambil lokasi";
+            if (error.code === 1) {
+                msg = "❌ Akses GPS ditolak! Izinkan akses lokasi di browser/HP";
+            } else if (error.code === 2) {
+                msg = "❌ Posisi tidak tersedia - cek koneksi GPS";
+            } else if (error.code === 3) {
+                msg = "❌ Timeout - coba lagi";
+            } else if (error.message.includes("Only secure origins")) {
+                msg = "❌ HTTPS wajib untuk GPS! Gunakan HTTPS atau akses via localhost";
+            }
+            document.getElementById("status").innerHTML = msg;
+            document.getElementById("status").className = "status error";
+        }
+    );
+}
+
+function directSubmit() {
+    // Langsung absen tanpa GPS - pake koordinat kantor
+    document.getElementById("lat").value = OFFICE_LAT;
+    document.getElementById("lng").value = OFFICE_LNG;
+    
+    document.getElementById("status").innerHTML = "✅ Langsung absen dari lokasi kantor!";
+    document.getElementById("status").className = "status success";
+    
+    isSubmitted = true;
+    document.getElementById("form").submit();
+}
+
+function manualSubmit() {
+    let lat = parseFloat(document.getElementById("manualLat").value);
+    let lng = parseFloat(document.getElementById("manualLng").value);
+    
+    if (isNaN(lat) || isNaN(lng)) {
+        document.getElementById("status").innerHTML = "❌ Input koordinat tidak valid!";
+        document.getElementById("status").className = "status error";
+        return;
+    }
+    
+    document.getElementById("lat").value = lat;
+    document.getElementById("lng").value = lng;
+    
+    let distance = getDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
+    document.getElementById("status").innerHTML = `📍 Jarak: ${Math.round(distance)}m dari kantor`;
+    
+    if (distance <= MAX_DISTANCE) {
+        document.getElementById("status").className = "status success";
+        document.getElementById("status").innerHTML += " ✅ Dalam Area!";
+        
+        if (userMarker) map.removeLayer(userMarker);
+        userMarker = L.marker([lat, lng], {
+            icon: L.divIcon({html: '👤', iconSize: [30, 30], iconAnchor: [15, 15]})
+        }).addTo(map)
+            .bindPopup(`<b>👤 Lokasi Anda</b><br>Jarak: ${Math.round(distance)}m`);
+        
+        if (line) map.removeLayer(line);
+        line = L.polyline([[lat, lng], [OFFICE_LAT, OFFICE_LNG]], {color: '#10b981', weight: 3, dashArray: '5, 10'}).addTo(map);
+        map.setView([lat, lng], 17);
+        
+        if (!isSubmitted) {
+            isSubmitted = true;
+            setTimeout(() => document.getElementById("form").submit(), 1000);
+        }
+    } else {
+        document.getElementById("status").className = "status error";
+        document.getElementById("status").innerHTML += " ❌ Terlalu jauh! Maksimal 150m";
+    }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="icon-xl">👥</span>
+        <div>
+            <h2>Kelola Akun</h2>
+            <p class="text-muted">Tambah, edit, atau hapus akun pengguna</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>➕ Tambah Akun Baru</h3>
+    </div>
+    <form method="POST" action="/create_user" class="user-form">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>👤 Username</label>
+                <input type="text" name="username" placeholder="Username" required>
+            </div>
+            <div class="form-group">
+                <label>📝 Nama Lengkap</label>
+                <input type="text" name="nama_lengkap" placeholder="Nama Lengkap" required>
+            </div>
+            <div class="form-group">
+                <label>🔒 Password</label>
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+            <div class="form-group">
+                <label>🏷️ Role</label>
+                <select name="role">
+                    <option value="user">👤 Pengunjung (User)</option>
+                    <option value="employee">👨‍💼 Karyawan</option>
+                    <option value="admin">👑 Admin</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn-primary">
+            <span>💾</span> Tambah Akun
+        </button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>📋 Semua Akun ({{ users|length }})</h3>
+    </div>
+    <div class="users-grid">
+        {% for u in users %}
+        <div class="user-card">
+            <div class="user-avatar-large">
+                {% if u['role'] == 'admin' %}👑{% elif u['role'] == 'employee' %}👨‍💼{% else %}👤{% endif %}
+            </div>
+            <div class="user-details">
+                <h4>{{ u['username'] }}</h4>
+                <p class="user-fullname">{{ u['nama_lengkap'] or '-' }}</p>
+                <span class="role-badge {{ u['role'] }}">
+                    {% if u['role'] == 'admin' %}👑 Admin
+                    {% elif u['role'] == 'employee' %}👨‍💼 Karyawan
+                    {% else %}👤 Pengunjung{% endif %}
+                </span>
+            </div>
+            {% if u['username'] != 'admin' %}
+            <div class="user-actions">
+                <a href="/delete_user/{{ u['id'] }}" class="btn-action delete" onclick="return confirm('Hapus akun ini?')">
+                    🗑️ Hapus
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+</div>
+</div>
+
+{% endblock %}
