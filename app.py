@@ -5,6 +5,8 @@ import uuid
 import sqlite3
 import midtransclient
 import math
+import io
+import base64
 from datetime import datetime
 from functools import wraps
 import logging
