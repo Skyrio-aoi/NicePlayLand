@@ -298,10 +298,11 @@ def hitung_jarak(lat1, lon1, lat2, lon2):
     return R * c
 
 # Initialize database on cold start (Vercel serverless)
+# DISABLED for debugging - enabling after confirming basic functionality
 try:
-    initialize_database()
+    pass  # initialize_database()
 except Exception as e:
-    logger.error(f"Failed to initialize database at startup: {e}", exc_info=True)
+    logger.error(f"Database initialization skipped: {e}", exc_info=True)
 
 # ================= ERROR HANDLERS =================
 
