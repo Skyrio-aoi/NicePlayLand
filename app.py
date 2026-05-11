@@ -40,21 +40,24 @@ except Exception as e:
 
 # ================= DATABASE =================
 
-def get_db():
-    # Use /tmp for Vercel serverless (ephemeral but writable)
-    # Use local file for development
+# Initialize DB flag to prevent reinitialization issues on serverless
+_db_initialized = False
+
+def _connect_db():
+    """Internal: just connect to database, no initialization"""
     import sys
     if 'vercel' in sys.executable.lower() or os.environ.get('VERCEL'):
         db_path = '/tmp/database.db'
+        # Ensure /tmp directory exists
+        os.makedirs('/tmp', exist_ok=True)
     else:
         db_path = 'database.db'
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
 
-def init_db():
-    conn = get_db()
-    
+def init_db_schema(conn):
+    """Create tables if they don't exist"""
     conn.execute('''
         CREATE TABLE IF NOT EXISTS tickets (
             id TEXT PRIMARY KEY,
@@ -64,7 +67,6 @@ def init_db():
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    
     conn.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,7 +79,6 @@ def init_db():
             created_at TEXT
         )
     ''')
-    
     conn.execute('''
         CREATE TABLE IF NOT EXISTS absensi (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,7 +89,6 @@ def init_db():
             status TEXT
         )
     ''')
-    
     conn.execute('''
         CREATE TABLE IF NOT EXISTS wahana (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,12 +100,10 @@ def init_db():
             wait_time INTEGER
         )
     ''')
-    
     conn.commit()
-    conn.close()
 
-def migrate_db():
-    conn = get_db()
+def migrate_db_schema(conn):
+    """Add missing columns"""
     columns = ['nama_lengkap', 'email', 'no_hp', 'created_at']
     for col in columns:
         try:
@@ -117,10 +115,9 @@ def migrate_db():
     except:
         pass
     conn.commit()
-    conn.close()
 
-def create_default_users():
-    conn = get_db()
+def create_default_users_data(conn):
+    """Create default user accounts"""
     for username, data in DEFAULT_USERS.items():
         existing = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
         if not existing:
@@ -129,14 +126,13 @@ def create_default_users():
                 (username, data['password'], data['role'])
             )
     conn.commit()
-    conn.close()
 
-def create_wahana():
-    conn = get_db()
+def create_wahana_data(conn):
+    """Create default attractions"""
     existing = conn.execute("SELECT COUNT(*) FROM wahana").fetchone()[0]
     if existing == 0:
         wahana_data = [
-            ('Roller Coaster', 'Sensasi多人terbang yang mendancurkan', '🎢', 'dry', 'available', 15),
+            ('Roller Coaster', 'Sensasi多人terbang yang mendancirkan', '🎢', 'dry', 'available', 15),
             ('Carousel', 'Wahana klasik favorit keluarga', '🎠', 'dry', 'available', 5),
             ('Ferris Wheel', 'Pemandangan kota dari atas', '🎡', 'dry', 'available', 20),
             ('Boat Ride', 'Petualangan danau dengan boat', '🛶', 'dry', 'available', 10),
@@ -151,12 +147,93 @@ def create_wahana():
                 (nama, deskripsi, emoji, kategori, status, wait_time)
             )
         conn.commit()
-    conn.close()
 
-init_db()
-migrate_db()
-create_default_users()
-create_wahana()
+def initialize_database():
+    """Initialize database on cold start (called once)"""
+    global _db_initialized
+    if _db_initialized:
+        return
+    
+    conn = None
+    try:
+        conn = _connect_db()
+        init_db_schema(conn)
+        migrate_db_schema(conn)
+        create_default_users_data(conn)
+        create_wahana_data(conn)
+        _db_initialized = True
+    except Exception as e:
+        logger.error(f"Database initialization error: {e}")
+        raise
+    finally:
+        if conn:
+            conn.close()
+
+def get_db():
+    """Get database connection (for request handlers)"""
+    conn = _connect_db()
+    return conn
+
+def migrate_db(conn=None):
+    if conn is None:
+        conn = get_db()
+    try:
+        columns = ['nama_lengkap', 'email', 'no_hp', 'created_at']
+        for col in columns:
+            try:
+                conn.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT")
+            except:
+                pass
+        try:
+            conn.execute("ALTER TABLE tickets ADD COLUMN created_at TEXT")
+        except:
+            pass
+        conn.commit()
+    finally:
+        if conn:
+            conn.close()
+
+def create_default_users(conn=None):
+    if conn is None:
+        conn = get_db()
+    try:
+        for username, data in DEFAULT_USERS.items():
+            existing = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
+            if not existing:
+                conn.execute(
+                    "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+                    (username, data['password'], data['role'])
+                )
+        conn.commit()
+    finally:
+        if conn:
+            conn.close()
+
+def create_wahana(conn=None):
+    if conn is None:
+        conn = get_db()
+    try:
+        existing = conn.execute("SELECT COUNT(*) FROM wahana").fetchone()[0]
+        if existing == 0:
+            wahana_data = [
+                ('Roller Coaster', 'Sensasi多人terbang yang mendancurkan', '🎢', 'dry', 'available', 15),
+                ('Carousel', 'Wahana klasik favorit keluarga', '🎠', 'dry', 'available', 5),
+                ('Ferris Wheel', 'Pemandangan kota dari atas', '🎡', 'dry', 'available', 20),
+                ('Boat Ride', 'Petualangan danau dengan boat', '🛶', 'dry', 'available', 10),
+                ('House of Horror', 'Rumah horor dengan efek especial', '🎪', 'indoor', 'available', 30),
+                ('Fun House', 'Playground dalam ruangan', '🏰', 'indoor', 'available', 0),
+                ('Arcade Zone', 'Game center dengan berbagai mesin', '🎯', 'indoor', 'available', 5),
+                ('Water Boom', 'Kolam air dengan seluncur', '🌊', 'water', 'maintenance', 25),
+            ]
+            for nama, deskripsi, emoji, kategori, status, wait_time in wahana_data:
+                conn.execute(
+                    "INSERT INTO wahana (nama, deskripsi, emoji, kategori, status, wait_time) VALUES (?, ?, ?, ?, ?, ?)",
+                    (nama, deskripsi, emoji, kategori, status, wait_time)
+                )
+            conn.commit()
+    finally:
+        if conn:
+            conn.close()
 
 # ================= HELPER FUNCTIONS =================
 
@@ -168,6 +245,13 @@ def hitung_jarak(lat1, lon1, lat2, lon2):
     a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
     return R * c
+
+# Initialize database on cold start (Vercel serverless)
+try:
+    initialize_database()
+except Exception as e:
+    logger.error(f"Failed to initialize database: {e}", exc_info=True)
+    # Continue without DB - some routes will fail but at least app loads
 
 # ================= ROUTES: PUBLIC =================
 
