@@ -321,6 +321,11 @@ def handle_exception(e):
 
 # ================= ROUTES: PUBLIC =================
 
+@app.route('/health')
+def health():
+    """Health check endpoint for monitoring"""
+    return {'status': 'ok', 'service': 'Nice PlayLand'}
+
 @app.route('/')
 def home():
     return render_template('public/index.html')
