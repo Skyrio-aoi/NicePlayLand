@@ -39,7 +39,14 @@ except Exception as e:
 # ================= DATABASE =================
 
 def get_db():
-    conn = sqlite3.connect('database.db')
+    # Use /tmp for Vercel serverless (ephemeral but writable)
+    # Use local file for development
+    import sys
+    if 'vercel' in sys.executable.lower() or os.environ.get('VERCEL'):
+        db_path = '/tmp/database.db'
+    else:
+        db_path = 'database.db'
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -342,14 +349,16 @@ def success():
         )
         conn.commit()
     
-    # Generate QR
+    # Generate QR as base64 (no file write needed)
+    import io
+    import base64
     qr_data = f"{BASE_URL}/verify/{ticket_id}"
     qr = qrcode.make(qr_data)
     
-    os.makedirs('static/img', exist_ok=True)
-    filename = f"{ticket_id}.png"
-    with open(f"static/img/{filename}", 'wb') as f:
-        qr.save(f)
+    buf = io.BytesIO()
+    qr.save(buf, format='PNG')
+    buf.seek(0)
+    qr_base64 = base64.b64encode(buf.read()).decode('utf-8')
     
     # Clear session
     session.pop('ticket_id', None)
@@ -359,7 +368,7 @@ def success():
         'public/qr_result.html',
         nama=nama,
         jumlah=jumlah,
-        qr_image=filename,
+        qr_image=f"data:image/png;base64,{qr_base64}",
         username=username
     )
 
