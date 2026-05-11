@@ -1,12 +1,8 @@
 from flask import Flask, render_template, request, session, redirect, jsonify, flash
-import qrcode
 import os
 import uuid
 import sqlite3
-import midtransclient
 import math
-import io
-import base64
 from datetime import datetime
 from functools import wraps
 import logging
@@ -27,28 +23,59 @@ app.debug = DEBUG
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Setup Midtrans
-try:
-    snap = midtransclient.Snap(
-        is_production=MIDTRANS_IS_PRODUCTION,
-        server_key=MIDTRANS_SERVER_KEY
-    )
-    logger.info("Midtrans configured successfully")
-except Exception as e:
-    logger.warning(f"Midtrans not configured: {e}")
-    snap = None
+# Lazy-load midtransclient to avoid import errors on Vercel
+_snap = None
+def get_snap():
+    global _snap
+    if _snap is None:
+        try:
+            import midtransclient
+            _snap = midtransclient.Snap(
+                is_production=MIDTRANS_IS_PRODUCTION,
+                server_key=MIDTRANS_SERVER_KEY
+            )
+            logger.info("Midtrans configured successfully")
+        except Exception as e:
+            logger.warning(f"Midtrans not configured: {e}")
+            _snap = None
+    return _snap
+
+# Lazy-load qrcode to avoid import errors on Vercel
+def generate_qr_base64(data):
+    try:
+        import io
+        import base64
+        import qrcode
+        qr = qrcode.make(data)
+        buf = io.BytesIO()
+        qr.save(buf, format='PNG')
+        buf.seek(0)
+        return base64.b64encode(buf.read()).decode('utf-8')
+    except Exception as e:
+        logger.error(f"QR generation failed: {e}")
+        return None
 
 # ================= DATABASE =================
 
-# Initialize DB flag to prevent reinitialization issues on serverless
+# Initialize DB flag with thread lock to prevent race conditions on serverless
 _db_initialized = False
+_db_lock = None  # Will be initialized on first use
+
+def _get_lock():
+    """Get a threading lock for DB initialization (thread-safe)"""
+    global _db_lock
+    if _db_lock is None:
+        import threading
+        _db_lock = threading.Lock()
+    return _db_lock
 
 def _connect_db():
     """Internal: just connect to database, no initialization"""
-    import sys
-    if 'vercel' in sys.executable.lower() or os.environ.get('VERCEL'):
+    # Use /tmp for Vercel serverless (ephemeral but writable)
+    # Use local file for development
+    is_vercel = os.environ.get('VERCEL') == '1' or os.environ.get('VERCEL') == 'true'
+    if is_vercel:
         db_path = '/tmp/database.db'
-        # Ensure /tmp directory exists
         os.makedirs('/tmp', exist_ok=True)
     else:
         db_path = 'database.db'
@@ -154,24 +181,48 @@ def initialize_database():
     if _db_initialized:
         return
     
-    conn = None
-    try:
-        conn = _connect_db()
-        init_db_schema(conn)
-        migrate_db_schema(conn)
-        create_default_users_data(conn)
-        create_wahana_data(conn)
-        _db_initialized = True
-    except Exception as e:
-        logger.error(f"Database initialization error: {e}")
-        raise
-    finally:
-        if conn:
-            conn.close()
+    lock = _get_lock()
+    with lock:
+        # Double-check pattern
+        if _db_initialized:
+            return
+        
+        conn = None
+        try:
+            conn = _connect_db()
+            init_db_schema(conn)
+            migrate_db_schema(conn)
+            create_default_users_data(conn)
+            create_wahana_data(conn)
+            _db_initialized = True
+            logger.info("Database initialized successfully")
+        except Exception as e:
+            logger.error(f"Database initialization error: {e}", exc_info=True)
+            # Continue without DB - some routes will fail but at least app loads
+        finally:
+            if conn:
+                conn.close()
 
 def get_db():
     """Get database connection (for request handlers)"""
     conn = _connect_db()
+    # Ensure DB is initialized on first use (in case cold start skipped or init failed)
+    global _db_initialized
+    if not _db_initialized:
+        lock = _get_lock()
+        with lock:
+            if not _db_initialized:
+                try:
+                    init_db_schema(conn)
+                    migrate_db_schema(conn)
+                    create_default_users_data(conn)
+                    create_wahana_data(conn)
+                    _db_initialized = True
+                    conn.commit()
+                except Exception as e:
+                    logger.error(f"Lazy DB init failed: {e}")
+                    # Mark as initialized to avoid repeated attempts
+                    _db_initialized = True
     return conn
 
 def migrate_db(conn=None):
@@ -250,8 +301,23 @@ def hitung_jarak(lat1, lon1, lat2, lon2):
 try:
     initialize_database()
 except Exception as e:
-    logger.error(f"Failed to initialize database: {e}", exc_info=True)
-    # Continue without DB - some routes will fail but at least app loads
+    logger.error(f"Failed to initialize database at startup: {e}", exc_info=True)
+
+# ================= ERROR HANDLERS =================
+
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error(f"Internal Server Error: {error}", exc_info=True)
+    return render_template('public/500.html'), 500
+
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('public/404.html'), 404
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    logger.error(f"Unhandled exception: {e}", exc_info=True)
+    return render_template('public/500.html', message=str(e)), 500
 
 # ================= ROUTES: PUBLIC =================
 
@@ -384,6 +450,7 @@ def ticket():
         session['ticket_id'] = ticket_id
         
         # Try Midtrans payment
+        snap = get_snap()
         if snap:
             try:
                 transaction = {
@@ -434,19 +501,12 @@ def success():
             (ticket_id, username, jumlah, 'valid')
         )
         conn.commit()
-    
     conn.close()
     
-    # Generate QR as base64 (no file write needed)
-    import io
-    import base64
-    qr_data = f"{BASE_URL}/verify/{ticket_id}"
-    qr = qrcode.make(qr_data)
-    
-    buf = io.BytesIO()
-    qr.save(buf, format='PNG')
-    buf.seek(0)
-    qr_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    # Generate QR as base64
+    qr_base64 = generate_qr_base64(f"{BASE_URL}/verify/{ticket_id}")
+    if not qr_base64:
+        return render_template('public/qr_result.html', error="Failed to generate QR code"), 500
     
     # Clear session
     session.pop('ticket_id', None)
