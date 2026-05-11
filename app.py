@@ -298,11 +298,13 @@ def hitung_jarak(lat1, lon1, lat2, lon2):
     return R * c
 
 # Initialize database on cold start (Vercel serverless)
-# DISABLED for debugging - enabling after confirming basic functionality
 try:
-    pass  # initialize_database()
+    logger.info("Starting database initialization...")
+    initialize_database()
+    logger.info("Database initialization completed successfully")
 except Exception as e:
-    logger.error(f"Database initialization skipped: {e}", exc_info=True)
+    logger.error(f"Database initialization failed: {e}", exc_info=True)
+    # Continue without DB - some routes will fail but at least app loads
 
 # ================= ERROR HANDLERS =================
 
@@ -326,6 +328,19 @@ def handle_exception(e):
 def health():
     """Health check endpoint for monitoring"""
     return {'status': 'ok', 'service': 'Nice PlayLand'}
+
+@app.route('/debug/db')
+def debug_db():
+    """Debug endpoint to test DB connection"""
+    try:
+        conn = _connect_db()
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        result = cur.fetchone()
+        conn.close()
+        return {'db_connected': True, 'result': result[0]}, 200
+    except Exception as e:
+        return {'db_connected': False, 'error': str(e)}, 500
 
 @app.route('/')
 def home():
