@@ -435,6 +435,8 @@ def success():
         )
         conn.commit()
     
+    conn.close()
+    
     # Generate QR as base64 (no file write needed)
     import io
     import base64
